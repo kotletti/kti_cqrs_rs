@@ -1,0 +1,6 @@
+[workspace]
+
+members = [
+  "packages/kti_cqrs_rs",
+  "packages/example"
+]
