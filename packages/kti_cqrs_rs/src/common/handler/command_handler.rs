@@ -1,6 +1,7 @@
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use async_trait::async_trait;
+use tokio::sync::Mutex;
 
 #[async_trait]
 pub trait CommandHandler: Send + Sync {

@@ -1,10 +1,9 @@
-# Implementation of CQRS pattern in Rust
+pub mod adapters;
+pub mod commands;
+pub mod contexts;
+pub mod ports;
+pub mod queries;
 
-### Currently the crate contains only query & command handlers
-
-Simple example (existed in repo)
-
-```
 #[cfg(test)]
 mod tests {
   use std::sync::Arc;
@@ -78,4 +77,3 @@ mod tests {
     assert!(res.is_err());
   }
 }
-```
