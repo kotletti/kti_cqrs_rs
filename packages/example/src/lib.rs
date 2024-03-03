@@ -1,7 +1,4 @@
-use std::{
-  error::Error,
-  sync::{Arc, Mutex},
-};
+use std::{error::Error, sync::Arc};
 
 use kti_cqrs_rs::core::bus::{CommandBus, QueryBus};
 use services::user_service::{
@@ -9,6 +6,7 @@ use services::user_service::{
   get_user_by_name_query::GetUserByNameQuery,
   user_service::{User, UserService},
 };
+use tokio::sync::Mutex;
 
 pub mod services;
 
@@ -54,10 +52,6 @@ impl TestSuit {
 
     Ok(())
   }
-}
-
-pub fn add(left: usize, right: usize) -> usize {
-  left + right
 }
 
 #[cfg(test)]
