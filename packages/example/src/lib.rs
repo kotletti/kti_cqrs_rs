@@ -1,6 +1,6 @@
 use std::{error::Error, sync::Arc};
 
-use kti_cqrs_rs::core::bus::{CommandBus, QueryBus};
+use kti_cqrs_rs::core::bus::{command_bus::CommandBus, query_bus::QueryBus};
 use services::user_service::{
   create_user_command::CreateUserCommand,
   get_user_by_name_query::GetUserByNameQuery,

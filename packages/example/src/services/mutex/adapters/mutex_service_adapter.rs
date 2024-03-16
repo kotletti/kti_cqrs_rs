@@ -1,24 +1,24 @@
 use std::{error::Error, sync::Arc};
 
 use async_trait::async_trait;
-use kti_cqrs_rs::core::bus::{CommandBus, QueryBus};
+use kti_cqrs_rs::core::bus::{command_bus::CommandBus, query_bus::QueryBus};
 use tokio::sync::Mutex;
 
-use crate::services::complex::{
-  commands::{add_element_command, remove_element_command},
-  contexts::complex_context::ComplexContext,
-  ports::complex_service_port::ComplexServicePort,
-  queries::{get_count_elements_query, get_elements_query},
+use crate::services::mutex::{
+  contexts::mutex_context::MutexContext, ports::mutex_service_port::MutexServicePort,
 };
 
-pub struct ComplexServiceAdapter {
-  context: Arc<Mutex<ComplexContext>>,
+use crate::services::mutex::commands::{add_element_command, remove_element_command};
+use crate::services::mutex::queries::{get_count_elements_query, get_elements_query};
+
+pub struct MutexServiceAdapter {
+  context: Arc<Mutex<MutexContext>>,
   command: CommandBus,
   query: QueryBus,
 }
 
-impl ComplexServiceAdapter {
-  pub fn new(context: Arc<Mutex<ComplexContext>>, command: CommandBus, query: QueryBus) -> Self {
+impl MutexServiceAdapter {
+  pub fn new(context: Arc<Mutex<MutexContext>>, command: CommandBus, query: QueryBus) -> Self {
     Self {
       context,
       command,
@@ -28,7 +28,7 @@ impl ComplexServiceAdapter {
 }
 
 #[async_trait]
-impl ComplexServicePort for ComplexServiceAdapter {
+impl MutexServicePort for MutexServiceAdapter {
   async fn get_elements(&self) -> Result<Vec<i32>, Box<dyn Error>> {
     let query = get_elements_query::Query;
 

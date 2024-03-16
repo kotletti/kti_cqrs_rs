@@ -8,26 +8,25 @@ pub mod queries;
 mod tests {
   use std::sync::Arc;
 
-  use kti_cqrs_rs::core::bus::{CommandBus, QueryBus};
+  use kti_cqrs_rs::core::bus::{command_bus::CommandBus, query_bus::QueryBus};
   use tokio::sync::Mutex;
 
   use super::{
     adapters::{
-      complex_repository_adapter::ComplexRepositoryAdapter,
-      complex_service_adapter::ComplexServiceAdapter,
+      mutex_repository_adapter::MutexRepositoryAdapter, mutex_service_adapter::MutexServiceAdapter,
     },
-    contexts::complex_context::ComplexContext,
-    ports::complex_service_port::ComplexServicePort,
+    contexts::mutex_context::MutexContext,
+    ports::mutex_service_port::MutexServicePort,
   };
 
-  fn create_service() -> Box<dyn ComplexServicePort> {
+  fn create_service() -> Box<dyn MutexServicePort> {
     let store = Arc::new(Mutex::new(vec![]));
 
-    let query_repository = Box::new(ComplexRepositoryAdapter::new(store.clone()));
-    let command_repository = Box::new(ComplexRepositoryAdapter::new(store));
+    let query_repository = Box::new(MutexRepositoryAdapter::new(store.clone()));
+    let command_repository = Box::new(MutexRepositoryAdapter::new(store));
 
-    Box::new(ComplexServiceAdapter::new(
-      Arc::new(Mutex::new(ComplexContext::new(
+    Box::new(MutexServiceAdapter::new(
+      Arc::new(Mutex::new(MutexContext::new(
         query_repository,
         command_repository,
       ))),
@@ -57,7 +56,7 @@ mod tests {
   }
 
   #[tokio::test]
-  async fn should_be_empty_vector_after_remove() {
+  async fn should_be_empty_after_remove() {
     let service = create_service();
 
     service.add_element(1).await.unwrap();
