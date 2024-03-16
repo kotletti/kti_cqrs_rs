@@ -1,33 +1,33 @@
-# Implementation of CQRS pattern in Rust
+pub mod adapters;
+pub mod commands;
+pub mod contexts;
+pub mod ports;
+pub mod queries;
 
-### Currently the crate contains only query & command handlers
-
-Simple example (existed in repo)
-
-```rust
 #[cfg(test)]
 mod tests {
   use std::sync::Arc;
 
   use kti_cqrs_rs::core::bus::{command_bus::CommandBus, query_bus::QueryBus};
-  use tokio::sync::Mutex;
+  use tokio::sync::RwLock;
 
   use super::{
     adapters::{
-      mutex_repository_adapter::MutexRepositoryAdapter, mutex_service_adapter::MutexServiceAdapter,
+      rw_lock_repository_adapter::RwLockRepositoryAdapter,
+      rw_lock_service_adapter::RwLockServiceAdapter,
     },
-    contexts::mutex_context::MutexContext,
-    ports::mutex_service_port::MutexServicePort,
+    contexts::rw_lock_context::RwLockContext,
+    ports::rw_lock_service_port::RwLockServicePort,
   };
 
-  fn create_service() -> Box<dyn MutexServicePort> {
-    let store = Arc::new(Mutex::new(vec![]));
+  fn create_service() -> Box<dyn RwLockServicePort> {
+    let store = Arc::new(RwLock::new(vec![]));
 
-    let query_repository = Box::new(MutexRepositoryAdapter::new(store.clone()));
-    let command_repository = Box::new(MutexRepositoryAdapter::new(store));
+    let query_repository = Box::new(RwLockRepositoryAdapter::new(store.clone()));
+    let command_repository = Box::new(RwLockRepositoryAdapter::new(store));
 
-    Box::new(MutexServiceAdapter::new(
-      Arc::new(Mutex::new(MutexContext::new(
+    Box::new(RwLockServiceAdapter::new(
+      Arc::new(RwLock::new(RwLockContext::new(
         query_repository,
         command_repository,
       ))),
@@ -77,4 +77,3 @@ mod tests {
     assert!(res.is_err());
   }
 }
-```

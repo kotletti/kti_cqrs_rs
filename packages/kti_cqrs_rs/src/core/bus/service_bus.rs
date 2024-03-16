@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 
-use crate::common::handler::{CommandHandler, QueryHandler};
+use crate::common::handler::{command_handler::CommandHandler, query_handler::QueryHandler};
 
 #[async_trait]
 pub trait ServiceBus {

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use kti_cqrs_rs::common::handler::CommandHandler;
+use kti_cqrs_rs::common::handler::command_handler::CommandHandler;
 use tokio::sync::Mutex;
 
 use super::user_service::UserService;
@@ -22,10 +22,10 @@ impl UpdateUserCommand {
 
 #[async_trait]
 impl CommandHandler for UpdateUserCommand {
-  type Context = UserService;
+  type Context = Arc<Mutex<UserService>>;
   type Output = ();
 
-  async fn execute(&self, context: Arc<Mutex<Self::Context>>) -> Self::Output {
+  async fn execute(&self, context: Self::Context) -> Self::Output {
     let mut user_service = context.lock().await;
 
     user_service

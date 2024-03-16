@@ -3,22 +3,22 @@ use std::{error::Error, sync::Arc};
 use async_trait::async_trait;
 use tokio::sync::Mutex;
 
-use crate::services::complex::ports::complex_repository_port::{
-  ComplexRepositoryCommandPort, ComplexRepositoryQueryPort,
+use crate::services::mutex::ports::mutex_repository_port::{
+  MutexRepositoryCommandPort, MutexRepositoryQueryPort,
 };
 
-pub struct ComplexRepositoryAdapter {
+pub struct MutexRepositoryAdapter {
   store: Arc<Mutex<Vec<i32>>>,
 }
 
-impl ComplexRepositoryAdapter {
+impl MutexRepositoryAdapter {
   pub fn new(store: Arc<Mutex<Vec<i32>>>) -> Self {
     Self { store }
   }
 }
 
 #[async_trait]
-impl ComplexRepositoryQueryPort for ComplexRepositoryAdapter {
+impl MutexRepositoryQueryPort for MutexRepositoryAdapter {
   async fn get_elements(&self) -> Result<Vec<i32>, Box<dyn Error>> {
     Ok((*self.store).lock().await.clone())
   }
@@ -29,7 +29,7 @@ impl ComplexRepositoryQueryPort for ComplexRepositoryAdapter {
 }
 
 #[async_trait]
-impl ComplexRepositoryCommandPort for ComplexRepositoryAdapter {
+impl MutexRepositoryCommandPort for MutexRepositoryAdapter {
   async fn add_element(&self, element: i32) -> Result<(), Box<dyn Error>> {
     let mut store = self.store.lock().await;
 
