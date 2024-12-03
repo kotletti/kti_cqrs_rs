@@ -1,6 +1,3 @@
 [workspace]
-
-members = [
-  "packages/kti_cqrs_rs",
-  "packages/example"
-]
+resolver = "2"
+members = ["packages/kti_cqrs_rs", "packages/example"]

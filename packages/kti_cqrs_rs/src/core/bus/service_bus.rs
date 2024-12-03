@@ -1,6 +1,8 @@
 use async_trait::async_trait;
 
-use crate::common::handler::{command_handler::CommandHandler, query_handler::QueryHandler};
+use crate::common::handler::{
+  command_handler::CommandHandler, event_handler::EventHandler, query_handler::QueryHandler,
+};
 
 #[async_trait]
 pub trait ServiceBus {
@@ -12,4 +14,6 @@ pub trait ServiceBus {
   ) -> O;
 
   async fn query<O>(&self, query: Box<dyn QueryHandler<Context = Self::Context, Output = O>>) -> O;
+
+  fn event(&self, event: Box<dyn EventHandler<Context = Self::Context>>);
 }

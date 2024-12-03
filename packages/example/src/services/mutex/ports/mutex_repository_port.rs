@@ -12,4 +12,5 @@ pub trait MutexRepositoryQueryPort: Send + Sync {
 pub trait MutexRepositoryCommandPort: Send + Sync {
   async fn add_element(&self, element: i32) -> Result<(), Box<dyn Error>>;
   async fn remove_element(&self, element: i32) -> Result<(), Box<dyn Error>>;
+  async fn update_element(&self, from_element: i32, to_element: i32) -> Result<(), Box<dyn Error>>;
 }

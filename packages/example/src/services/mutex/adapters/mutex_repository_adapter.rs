@@ -57,4 +57,18 @@ impl MutexRepositoryCommandPort for MutexRepositoryAdapter {
       None => Err(format!("Element {} does not exist", element).into()),
     }
   }
+
+  async fn update_element(&self, from_element: i32, to_element: i32) -> Result<(), Box<dyn Error>> {
+    let mut store = self.store.lock().await;
+
+    let index = store.iter().position(|x| *x == from_element);
+
+    match index {
+      Some(i) => {
+        store[i] = to_element;
+        Ok(())
+      }
+      None => Err(format!("Element {} does not exist", from_element).into()),
+    }
+  }
 }

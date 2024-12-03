@@ -1,15 +1,16 @@
 pub mod adapters;
 pub mod commands;
 pub mod contexts;
+pub mod events;
 pub mod ports;
 pub mod queries;
 
 #[cfg(test)]
 mod tests {
-  use std::sync::Arc;
+  use std::{sync::Arc, time::Duration};
 
-  use kti_cqrs_rs::core::bus::{command_bus::CommandBus, query_bus::QueryBus};
-  use tokio::sync::Mutex;
+  use kti_cqrs_rs::core::bus::{command_bus::CommandBus, event_bus::EventBus, query_bus::QueryBus};
+  use tokio::{sync::Mutex, time::sleep};
 
   use super::{
     adapters::{
@@ -32,6 +33,7 @@ mod tests {
       ))),
       CommandBus,
       QueryBus,
+      EventBus,
     ))
   }
 
@@ -74,5 +76,70 @@ mod tests {
     let res = service.remove_element(1).await;
 
     assert!(res.is_err());
+  }
+
+  #[tokio::test]
+  async fn should_be_updated_element() {
+    let from_element = 1;
+    let to_element = 2;
+    let service = create_service();
+
+    service.add_element(from_element).await.unwrap();
+    service
+      .update_element(from_element, to_element)
+      .await
+      .unwrap();
+
+    let elements = service.get_elements().await.unwrap();
+
+    let updated_element = elements.first().unwrap();
+
+    assert_eq!(*updated_element, to_element);
+  }
+
+  #[tokio::test]
+  async fn should_be_incremented_by_event() {
+    let element = 43;
+    let service = create_service();
+
+    service.add_element_with_event(element).await.unwrap();
+
+    sleep(Duration::from_secs(1)).await;
+
+    let elements = service.get_elements().await.unwrap();
+
+    let incremented_element = elements.first().unwrap();
+
+    assert_eq!(*incremented_element, element + 1);
+  }
+
+  #[tokio::test]
+  async fn should_be_failed_incremented_by_event() {
+    let element = 42;
+    let service = create_service();
+
+    service.add_element_with_event(element).await.unwrap();
+
+    sleep(Duration::from_secs(1)).await;
+
+    let elements = service.get_elements().await.unwrap();
+
+    let incremented_element = elements.first().unwrap();
+
+    assert_eq!(*incremented_element, element);
+  }
+
+  #[tokio::test]
+  async fn should_be_failed_increment_without_awaiting() {
+    let element = 43;
+    let service = create_service();
+
+    service.add_element_with_event(element).await.unwrap();
+
+    let elements = service.get_elements().await.unwrap();
+
+    let incremented_element = elements.first().unwrap();
+
+    assert_eq!(*incremented_element, element);
   }
 }

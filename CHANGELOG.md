@@ -1,5 +1,10 @@
 # Changelog
 
+## Version 0.3.0
+* Implement async event bus
+* Add example for `tokio::sync::Mutex`
+* Add tests
+
 ## Version 0.2.0 BREAKING CHANGES
 * Modify context for more flexible control of types
 * Add example for `tokio::sync::Mutex`
