@@ -2,7 +2,10 @@
 
 ## Version 0.3.0
 * Implement async event bus
-* Add example for `tokio::sync::Mutex`
+* `CommandBus` -> `CommandBusAdapter`
+* `QueryBus` -> `QueryBusAdapter`
+* Remove `Mutex` tests
+* Update `RwLock` tests
 * Add tests
 
 ## Version 0.2.0 BREAKING CHANGES
