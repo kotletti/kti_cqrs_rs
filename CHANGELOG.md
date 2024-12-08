@@ -1,5 +1,15 @@
 # Changelog
 
+## Version 0.3.0
+* Implement async event bus
+* `CommandHandler` -> `CommandHandlerPort`
+* `QueryHandler` -> `QueryHandlerPort`
+* `CommandBus` -> `CommandBusAdapter`
+* `QueryBus` -> `QueryBusAdapter`
+* Remove `Mutex` tests
+* Update `RwLock` tests
+* Add tests
+
 ## Version 0.2.0 BREAKING CHANGES
 * Modify context for more flexible control of types
 * Add example for `tokio::sync::Mutex`
