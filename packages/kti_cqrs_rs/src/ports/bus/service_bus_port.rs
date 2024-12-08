@@ -1,11 +1,12 @@
 use async_trait::async_trait;
 
 use crate::{
-  common::handler::{event_handler::EventHandler, query_handler::QueryHandler},
   errors::error::Error,
+  ports::handler::{
+    command_handler_port::CommandHandlerPort, event_handler_port::EventHandlerPort,
+    query_handler_port::QueryHandlerPort,
+  },
 };
-
-use super::command_handler_port::CommandHandlerPort;
 
 #[async_trait]
 pub trait ServiceBusPort {
@@ -18,8 +19,8 @@ pub trait ServiceBusPort {
 
   async fn query<O>(
     &self,
-    query: Box<dyn QueryHandler<Context = Self::Context, Output = O>>,
+    query: Box<dyn QueryHandlerPort<Context = Self::Context, Output = O>>,
   ) -> Result<O, Error>;
 
-  fn event(&self, event: Box<dyn EventHandler<Context = Self::Context>>);
+  fn event(&self, event: Box<dyn EventHandlerPort<Context = Self::Context>>);
 }
