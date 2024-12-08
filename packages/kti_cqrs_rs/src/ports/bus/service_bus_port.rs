@@ -22,5 +22,8 @@ pub trait ServiceBusPort {
     query: Box<dyn QueryHandlerPort<Context = Self::Context, Output = O>>,
   ) -> Result<O, Error>;
 
-  fn event(&self, event: Box<dyn EventHandlerPort<Context = Self::Context>>);
+  async fn event(
+    &self,
+    event: Box<dyn EventHandlerPort<Context = Self::Context>>,
+  ) -> Result<(), Error>;
 }
