@@ -9,31 +9,37 @@ Simple example (existed in repo)
 mod tests {
   use std::{sync::Arc, time::Duration};
 
-  use kti_cqrs_rs::core::bus::{command_bus::CommandBus, event_bus::EventBus, query_bus::QueryBus};
-  use tokio::{sync::Mutex, time::sleep};
+  use kti_cqrs_rs::adapters::{
+    command_bus_adapter::CommandBusAdapter, event_bus_adapter::EventBusAdapter,
+    query_bus_adapter::QueryBusAdapter,
+  };
+  use tokio::{sync::RwLock, time::sleep};
 
-  use super::{
+  use crate::{
     adapters::{
-      mutex_repository_adapter::MutexRepositoryAdapter, mutex_service_adapter::MutexServiceAdapter,
+      element_repository_command_adapter::ElementRepositoryCommandAdapter,
+      element_repository_query_adapter::ElementRepositoryQueryAdapter,
+      element_service_adapter::ElementServiceAdapter,
     },
-    contexts::mutex_context::MutexContext,
-    ports::mutex_service_port::MutexServicePort,
+    contexts::app_context::AppContext,
+    ports::element_service_port::ElementServicePort,
+    stores::element_repository_store::ElementRepositoryStore,
   };
 
-  fn create_service() -> Box<dyn MutexServicePort> {
-    let store = Arc::new(Mutex::new(vec![]));
+  fn create_service() -> Box<dyn ElementServicePort> {
+    let store = ElementRepositoryStore::new(Arc::new(RwLock::new(vec![])));
 
-    let query_repository = Box::new(MutexRepositoryAdapter::new(store.clone()));
-    let command_repository = Box::new(MutexRepositoryAdapter::new(store));
+    let query_repository = Box::new(ElementRepositoryQueryAdapter::new(store.clone()));
+    let command_repository = Box::new(ElementRepositoryCommandAdapter::new(store.clone()));
 
-    Box::new(MutexServiceAdapter::new(
-      Arc::new(Mutex::new(MutexContext::new(
+    Box::new(ElementServiceAdapter::new(
+      Arc::new(RwLock::new(AppContext::new(
         query_repository,
         command_repository,
       ))),
-      CommandBus,
-      QueryBus,
-      EventBus,
+      CommandBusAdapter,
+      QueryBusAdapter,
+      EventBusAdapter,
     ))
   }
 
