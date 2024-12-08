@@ -1,6 +1,6 @@
 # Implementation of CQRS pattern in Rust
 
-### Currently the crate contains only query & command handlers
+### Currently the crate contains only query, command, events handlers
 
 Simple example (existed in repo)
 
