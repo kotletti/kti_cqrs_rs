@@ -2,6 +2,8 @@
 
 ## Version 0.3.0
 * Implement async event bus
+* `CommandHandler` -> `CommandHandlerPort`
+* `QueryHandler` -> `QueryHandlerPort`
 * `CommandBus` -> `CommandBusAdapter`
 * `QueryBus` -> `QueryBusAdapter`
 * Remove `Mutex` tests
