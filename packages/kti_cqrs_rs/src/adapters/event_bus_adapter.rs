@@ -1,14 +1,21 @@
+use async_trait::async_trait;
+
 use crate::ports::{
-  bus::event_bus_port::EventBusPort, handler::event_handler_port::EventHandlerPort,
+    bus::event_bus_port::EventBusPort, handler::event_handler_port::EventHandlerPort,
 };
 
 #[derive(Clone, Copy)]
 pub struct EventBusAdapter;
 
+#[async_trait]
 impl EventBusPort for EventBusAdapter {
-  fn send<C: Send + 'static>(&self, event: Box<dyn EventHandlerPort<Context = C>>, context: C) {
-    tokio::spawn(async move {
-      std::mem::drop(event.execute(context).await);
-    });
-  }
+    async fn send<H>(&self, event: H, context: H::Context)
+    where
+        H: EventHandlerPort + Send + 'static,
+        H::Context: Send + 'static,
+    {
+        if let Err(e) = event.execute(context).await {
+            eprintln!("{e}");
+        };
+    }
 }

@@ -10,13 +10,13 @@ pub struct GetCountElementsQuery;
 
 #[async_trait]
 impl QueryHandlerPort for GetCountElementsQuery {
-  type Context = Arc<RwLock<AppContext>>;
-  type Output = usize;
+    type Context = Arc<RwLock<AppContext>>;
+    type Output = Result<usize, Error>;
 
-  async fn execute(&self, context: Self::Context) -> Result<Self::Output, Error> {
-    let ctx = context.read().await;
-    let query_repository = ctx.get_query_repository();
+    async fn execute(&self, context: Self::Context) -> Self::Output {
+        let ctx = context.read().await;
+        let query_repository = ctx.get_query_repository();
 
-    query_repository.get_count().await
-  }
+        query_repository.get_count().await
+    }
 }

@@ -1,3 +1,9 @@
 [workspace]
-resolver = "2"
+package.version = "0.4.0"
+package.edition = "2024"
+resolver = "3"
 members = ["packages/kti_cqrs_rs", "packages/example"]
+
+[workspace.dependencies]
+tokio = { version = "1.53.1", features = ["full"] }
+async-trait = "0.1.92"

@@ -7,18 +7,18 @@ use tokio::sync::RwLock;
 use crate::contexts::app_context::AppContext;
 
 pub struct AddElementCommand {
-  pub element: i32,
+    pub element: i32,
 }
 
 #[async_trait]
 impl CommandHandlerPort for AddElementCommand {
-  type Context = Arc<RwLock<AppContext>>;
-  type Output = ();
+    type Context = Arc<RwLock<AppContext>>;
+    type Output = Result<(), Error>;
 
-  async fn execute(&self, context: Self::Context) -> Result<Self::Output, Error> {
-    let ctx = context.write().await;
-    let command_repository = ctx.get_command_repository();
+    async fn execute(&self, context: Self::Context) -> Self::Output {
+        let ctx = context.read().await;
+        let command_repository = ctx.get_command_repository();
 
-    command_repository.add_element(self.element).await
-  }
+        command_repository.add_element(self.element).await
+    }
 }

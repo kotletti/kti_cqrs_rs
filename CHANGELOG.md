@@ -1,5 +1,21 @@
 # Changelog
 
+## Version 0.4.0 BREAKING CHANGES
+* Remove `Result<O, Error>` from handler and bus signatures
+* `CommandHandlerPort::execute` now returns `Self::Output`
+* `QueryHandlerPort::execute` now returns `Self::Output`
+* `EventHandlerPort::execute` still returns `Result<(), Error>` (error handling moved to adapter)
+* The error type is now up to the user: put a `Result` into `Output`
+* `errors::error::Error` is kept as a convenience alias
+* Buses and `ServiceBusPort` take a handler by value instead of `Box<dyn ...>`
+* `CommandBusPort::send` and `QueryBusPort::send` now return `H::Output`
+* `ServiceBusPort::Context` now requires `Send + 'static`
+* `ServiceBusPort::event` is now sync
+* Add blanket `impl CommandHandlerPort for Box<H>`, same for `QueryHandlerPort` and `EventHandlerPort`
+* `EventBusAdapter::send` now executes events synchronously via `await` instead of spawning detached tasks
+* `EventBusAdapter` logs errors via `eprintln!` instead of requiring handlers to handle them internally
+* Remove the leftover `QueryBus` struct (renamed to `QueryBusAdapter` back in 0.3.0)
+
 ## Version 0.3.0
 * Implement async event bus
 * `CommandHandler` -> `CommandHandlerPort`

@@ -10,13 +10,13 @@ pub struct GetElementsQuery;
 
 #[async_trait]
 impl QueryHandlerPort for GetElementsQuery {
-  type Context = Arc<RwLock<AppContext>>;
-  type Output = Vec<i32>;
+    type Context = Arc<RwLock<AppContext>>;
+    type Output = Result<Vec<i32>, Error>;
 
-  async fn execute(&self, context: Self::Context) -> Result<Self::Output, Error> {
-    let ctx = context.read().await;
-    let query_repository = ctx.get_query_repository();
+    async fn execute(&self, context: Self::Context) -> Self::Output {
+        let ctx = context.read().await;
+        let query_repository = ctx.get_query_repository();
 
-    query_repository.get_elements().await
-  }
+        query_repository.get_elements().await
+    }
 }

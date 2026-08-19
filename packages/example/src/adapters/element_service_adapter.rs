@@ -20,96 +20,77 @@ use crate::queries::get_count_elements_query::GetCountElementsQuery;
 use crate::queries::get_elements_query::GetElementsQuery;
 
 pub struct ElementServiceAdapter {
-  context: Arc<RwLock<AppContext>>,
-  command: CommandBusAdapter,
-  query: QueryBusAdapter,
-  event: EventBusAdapter,
-}
-
-impl ElementServiceAdapter {
-  pub fn new(
     context: Arc<RwLock<AppContext>>,
     command: CommandBusAdapter,
     query: QueryBusAdapter,
     event: EventBusAdapter,
-  ) -> Self {
-    Self {
-      context,
-      command,
-      query,
-      event,
+}
+
+impl ElementServiceAdapter {
+    pub fn new(
+        context: Arc<RwLock<AppContext>>,
+        command: CommandBusAdapter,
+        query: QueryBusAdapter,
+        event: EventBusAdapter,
+    ) -> Self {
+        Self {
+            context,
+            command,
+            query,
+            event,
+        }
     }
-  }
 }
 
 #[async_trait]
 impl ElementServicePort for ElementServiceAdapter {
-  async fn get_elements(&self) -> Result<Vec<i32>, Error> {
-    let query = GetElementsQuery;
-
-    let elements = self
-      .query
-      .send(Box::new(query), self.context.clone())
-      .await?;
-
-    Ok(elements)
-  }
-
-  async fn add_element(&self, element: i32) -> Result<(), Error> {
-    let command = AddElementCommand { element };
-
-    self
-      .command
-      .send(Box::new(command), self.context.clone())
-      .await
-  }
-
-  async fn add_element_with_event(&self, element: i32) -> Result<(), Error> {
-    let command = AddElementCommand { element };
-
-    self
-      .command
-      .send(Box::new(command), self.context.clone())
-      .await?;
-
-    if element > 42 {
-      let event = IncrementElementEvent { element };
-
-      self.event.send(Box::new(event), self.context.clone());
+    async fn get_elements(&self) -> Result<Vec<i32>, Error> {
+        self.query
+            .send(GetElementsQuery, self.context.clone())
+            .await
     }
 
-    Ok(())
-  }
+    async fn add_element(&self, element: i32) -> Result<(), Error> {
+        self.command
+            .send(AddElementCommand { element }, self.context.clone())
+            .await
+    }
 
-  async fn remove_element(&self, element: i32) -> Result<(), Error> {
-    let command = RemoveElementCommand { element };
+    async fn add_element_with_event(&self, element: i32) -> Result<(), Error> {
+        self.command
+            .send(AddElementCommand { element }, self.context.clone())
+            .await?;
 
-    self
-      .command
-      .send(Box::new(command), self.context.clone())
-      .await
-  }
+        if element > 42 {
+            self.event
+                .send(IncrementElementEvent { element }, self.context.clone())
+                .await;
+        }
 
-  async fn update_element(&self, from_element: i32, to_element: i32) -> Result<(), Error> {
-    let command = UpdateElementCommand {
-      from_element,
-      to_element,
-    };
+        Ok(())
+    }
 
-    self
-      .command
-      .send(Box::new(command), self.context.clone())
-      .await
-  }
+    async fn remove_element(&self, element: i32) -> Result<(), Error> {
+        self.command
+            .send(RemoveElementCommand { element }, self.context.clone())
+            .await
+    }
 
-  async fn get_count(&self) -> Result<usize, Error> {
-    let query = GetCountElementsQuery;
+    async fn update_element(&self, from_element: i32, to_element: i32) -> Result<(), Error> {
+        self.command
+            .send(
+                UpdateElementCommand {
+                    from_element,
+                    to_element,
+                },
+                self.context.clone(),
+            )
+            .await
+    }
 
-    let count = self
-      .query
-      .send(Box::new(query), self.context.clone())
-      .await?;
-
-    Ok(count)
-  }
+    async fn get_count(&self) -> Result<usize, Error> {
+        self.query
+            .send(GetCountElementsQuery, self.context.clone())
+            .await
+    }
 }
