@@ -1,21 +1,64 @@
-use async_trait::async_trait;
-
-use crate::ports::{
-    bus::event_bus_port::EventBusPort, handler::event_handler_port::EventHandlerPort,
+use std::{
+    any::{Any, TypeId, type_name},
+    collections::HashMap,
+    sync::Arc,
 };
 
-#[derive(Clone, Copy)]
-pub struct EventBusAdapter;
+use crate::{
+    errors::error::Error,
+    ports::{
+        bus::event_bus_port::EventBusPort,
+        event_port::EventPort,
+        handler::event_handler_port::{EventHandler, EventHandlerPort},
+    },
+};
 
-#[async_trait]
-impl EventBusPort for EventBusAdapter {
-    async fn send<H>(&self, event: H, context: H::Context)
+#[derive(Default)]
+pub struct EventBusAdapter {
+    handlers: HashMap<TypeId, Box<dyn Any + Send + Sync>>,
+}
+
+impl EventBusAdapter {
+    pub fn register<Event, Handler>(mut self, handler: Handler) -> Result<Self, Error>
     where
-        H: EventHandlerPort + Send + 'static,
-        H::Context: Send + 'static,
+        Event: EventPort,
+        Handler: EventHandlerPort<Event> + 'static,
     {
-        if let Err(e) = event.execute(context).await {
-            eprintln!("{e}");
+        let type_id = TypeId::of::<Event>();
+        let type_name = type_name::<Event>();
+
+        let handler: EventHandler<Event> = Arc::new(handler);
+
+        if self.handlers.insert(type_id, Box::new(handler)).is_some() {
+            return Err(Error::from(format!(
+                "Command handler is already registered: {type_name}"
+            )));
+        }
+
+        Ok(self)
+    }
+}
+
+impl EventBusPort for EventBusAdapter {
+    fn send<Event: EventPort + Sync>(&self, event: Event) {
+        let type_id = TypeId::of::<Event>();
+        let type_name = type_name::<Event>();
+
+        let Some(handler) = self
+            .handlers
+            .get(&type_id)
+            .and_then(|h| h.downcast_ref::<EventHandler<Event>>())
+            .cloned()
+        else {
+            eprintln!("Event handler not found: {type_name}");
+
+            return;
         };
+
+        tokio::spawn(async move {
+            let event = event.clone();
+
+            handler.handle(event).await
+        });
     }
 }

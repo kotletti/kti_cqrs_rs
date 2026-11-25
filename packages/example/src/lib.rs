@@ -25,31 +25,47 @@ mod tests {
             element_repository_query_adapter::ElementRepositoryQueryAdapter,
             element_service_adapter::ElementServiceAdapter,
         },
-        contexts::app_context::AppContext,
+        commands::{
+            add_element_command::AddElementHandler, remove_element_command::RemoveElementHandler,
+            update_element_command::UpdateElementHandler,
+        },
+        events::increment_element_event::IncrementElementHandler,
         ports::element_service_port::ElementServicePort,
+        queries::{
+            get_count_elements_query::GetCountElementsHandler,
+            get_elements_query::GetElementsHandler,
+        },
         stores::element_repository_store::ElementRepositoryStore,
     };
 
-    fn create_service() -> Box<dyn ElementServicePort> {
+    fn create_service() -> Result<Box<dyn ElementServicePort>, Error> {
         let store = ElementRepositoryStore::new(Arc::new(RwLock::new(vec![])));
 
-        let query_repository = Box::new(ElementRepositoryQueryAdapter::new(store.clone()));
-        let command_repository = Box::new(ElementRepositoryCommandAdapter::new(store.clone()));
+        let query_repository = Arc::new(ElementRepositoryQueryAdapter::new(store.clone()));
+        let command_repository = Arc::new(ElementRepositoryCommandAdapter::new(store));
 
-        Box::new(ElementServiceAdapter::new(
-            Arc::new(RwLock::new(AppContext::new(
-                query_repository,
-                command_repository,
-            ))),
-            CommandBusAdapter,
-            QueryBusAdapter,
-            EventBusAdapter,
-        ))
+        let command_bus = CommandBusAdapter::default()
+            .register(AddElementHandler::new(command_repository.clone()))?
+            .register(UpdateElementHandler::new(command_repository.clone()))?
+            .register(RemoveElementHandler::new(command_repository.clone()))?;
+
+        let query_bus = QueryBusAdapter::default()
+            .register(GetElementsHandler::new(query_repository.clone()))?
+            .register(GetCountElementsHandler::new(query_repository))?;
+
+        let event_bus = EventBusAdapter::default()
+            .register(IncrementElementHandler::new(command_repository))?;
+
+        Ok(Box::new(ElementServiceAdapter::new(
+            command_bus,
+            query_bus,
+            event_bus,
+        )))
     }
 
     #[tokio::test]
     async fn should_be_empty_vector() -> Result<(), Error> {
-        let service = create_service();
+        let service = create_service()?;
 
         let count = service.get_count().await?;
 
@@ -60,7 +76,7 @@ mod tests {
 
     #[tokio::test]
     async fn should_be_one_element() -> Result<(), Error> {
-        let service = create_service();
+        let service = create_service()?;
 
         service.add_element(1).await?;
 
@@ -73,7 +89,7 @@ mod tests {
 
     #[tokio::test]
     async fn should_be_empty_after_remove() -> Result<(), Error> {
-        let service = create_service();
+        let service = create_service()?;
 
         service.add_element(1).await?;
         service.remove_element(1).await?;
@@ -87,7 +103,7 @@ mod tests {
 
     #[tokio::test]
     async fn should_be_error_on_remove_not_existed_element() -> Result<(), Error> {
-        let service = create_service();
+        let service = create_service()?;
 
         let res = service.remove_element(1).await;
 
@@ -100,7 +116,7 @@ mod tests {
     async fn should_be_updated_element() -> Result<(), Error> {
         let from_element = 1;
         let to_element = 2;
-        let service = create_service();
+        let service = create_service()?;
 
         service.add_element(from_element).await?;
         service.update_element(from_element, to_element).await?;
@@ -117,7 +133,7 @@ mod tests {
     #[tokio::test]
     async fn should_be_incremented_by_event() -> Result<(), Error> {
         let element = 43;
-        let service = create_service();
+        let service = create_service()?;
 
         service.add_element_with_event(element).await?;
 
@@ -135,7 +151,7 @@ mod tests {
     #[tokio::test]
     async fn should_be_failed_incremented_by_event() -> Result<(), Error> {
         let element = 42;
-        let service = create_service();
+        let service = create_service()?;
 
         service.add_element_with_event(element).await?;
 

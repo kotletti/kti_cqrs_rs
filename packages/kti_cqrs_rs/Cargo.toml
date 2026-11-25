@@ -9,4 +9,5 @@ repository = "https://github.com/kotletti/kti_cqrs_rs"
 readme = "../../README.md"
 
 [dependencies]
+tokio = { workspace = true }
 async-trait = { workspace = true }

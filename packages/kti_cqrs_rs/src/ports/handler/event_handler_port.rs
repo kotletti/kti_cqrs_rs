@@ -1,23 +1,12 @@
+use std::sync::Arc;
+
 use async_trait::async_trait;
 
-use crate::errors::error::Error;
+use crate::{errors::error::Error, ports::event_port::EventPort};
 
 #[async_trait]
-pub trait EventHandlerPort: Send + Sync {
-    type Context;
-
-    async fn execute(&self, context: Self::Context) -> Result<(), Error>;
+pub trait EventHandlerPort<Event: EventPort>: Send + Sync {
+    async fn handle(&self, event: Event) -> Result<(), Error>;
 }
 
-#[async_trait]
-impl<H> EventHandlerPort for Box<H>
-where
-    H: EventHandlerPort + ?Sized,
-    H::Context: Send + 'static,
-{
-    type Context = H::Context;
-
-    async fn execute(&self, context: Self::Context) -> Result<(), Error> {
-        (**self).execute(context).await
-    }
-}
+pub type EventHandler<Event> = Arc<dyn EventHandlerPort<Event>>;

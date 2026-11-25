@@ -1,24 +1,12 @@
+use std::sync::Arc;
+
 use async_trait::async_trait;
 
-#[async_trait]
-pub trait QueryHandlerPort: Send + Sync {
-    type Context;
-    type Output;
-
-    async fn execute(&self, context: Self::Context) -> Self::Output;
-}
+use crate::{errors::error::Error, ports::query_port::QueryPort};
 
 #[async_trait]
-impl<H> QueryHandlerPort for Box<H>
-where
-    H: QueryHandlerPort + ?Sized,
-    H::Context: Send + 'static,
-    H::Output: Send + 'static,
-{
-    type Context = H::Context;
-    type Output = H::Output;
-
-    async fn execute(&self, context: Self::Context) -> Self::Output {
-        (**self).execute(context).await
-    }
+pub trait QueryHandlerPort<Query: QueryPort>: Send + Sync {
+    async fn handle(&self, query: Query) -> Result<Query::Output, Error>;
 }
+
+pub type QueryHandler<Query> = Arc<dyn QueryHandlerPort<Query>>;

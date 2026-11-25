@@ -1,24 +1,34 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use kti_cqrs_rs::{errors::error::Error, ports::handler::command_handler_port::CommandHandlerPort};
-use tokio::sync::RwLock;
+use kti_cqrs_rs::{
+    errors::error::Error,
+    ports::{command_port::CommandPort, handler::command_handler_port::CommandHandlerPort},
+};
 
-use crate::contexts::app_context::AppContext;
+use crate::ports::element_repository_command_port::ElementRepositoryCommandPort;
 
 pub struct RemoveElementCommand {
     pub element: i32,
 }
 
+impl CommandPort for RemoveElementCommand {
+    type Output = ();
+}
+
+pub struct RemoveElementHandler {
+    repository: Arc<dyn ElementRepositoryCommandPort>,
+}
+
+impl RemoveElementHandler {
+    pub fn new(repository: Arc<dyn ElementRepositoryCommandPort>) -> Self {
+        Self { repository }
+    }
+}
+
 #[async_trait]
-impl CommandHandlerPort for RemoveElementCommand {
-    type Context = Arc<RwLock<AppContext>>;
-    type Output = Result<(), Error>;
-
-    async fn execute(&self, context: Self::Context) -> Self::Output {
-        let ctx = context.read().await;
-        let command_repository = ctx.get_command_repository();
-
-        command_repository.remove_element(self.element).await
+impl CommandHandlerPort<RemoveElementCommand> for RemoveElementHandler {
+    async fn handle(&self, command: RemoveElementCommand) -> Result<(), Error> {
+        self.repository.remove_element(command.element).await
     }
 }

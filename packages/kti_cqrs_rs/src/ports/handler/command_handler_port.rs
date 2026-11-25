@@ -1,24 +1,12 @@
+use std::sync::Arc;
+
 use async_trait::async_trait;
 
-#[async_trait]
-pub trait CommandHandlerPort: Send + Sync {
-    type Context;
-    type Output;
-
-    async fn execute(&self, context: Self::Context) -> Self::Output;
-}
+use crate::{errors::error::Error, ports::command_port::CommandPort};
 
 #[async_trait]
-impl<H> CommandHandlerPort for Box<H>
-where
-    H: CommandHandlerPort + ?Sized,
-    H::Context: Send + 'static,
-    H::Output: Send + 'static,
-{
-    type Context = H::Context;
-    type Output = H::Output;
-
-    async fn execute(&self, context: Self::Context) -> Self::Output {
-        (**self).execute(context).await
-    }
+pub trait CommandHandlerPort<Command: CommandPort>: Send + Sync {
+    async fn handle(&self, command: Command) -> Result<Command::Output, Error>;
 }
+
+pub type CommandHandler<Command> = Arc<dyn CommandHandlerPort<Command>>;

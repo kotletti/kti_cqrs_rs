@@ -43,7 +43,7 @@ dependencies = [
 
 [[package]]
 name = "example"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "async-trait",
  "kti_cqrs_rs",
@@ -52,9 +52,10 @@ dependencies = [
 
 [[package]]
 name = "kti_cqrs_rs"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "async-trait",
+ "tokio",
 ]
 
 [[package]]
@@ -184,9 +185,9 @@ dependencies = [
 
 [[package]]
 name = "tokio"
-version = "1.53.1"
+version = "1.54.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "202caea871b69668250d242070849eb495be178ed697a3e98aebce5bc81a0bed"
+checksum = "b52fd3255258d26fac7264ab5a76b53c13367136dc011d3d6ad4f8ed070396a3"
 dependencies = [
  "bytes",
  "libc",

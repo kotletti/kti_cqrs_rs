@@ -1,22 +1,32 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use kti_cqrs_rs::{errors::error::Error, ports::handler::query_handler_port::QueryHandlerPort};
-use tokio::sync::RwLock;
+use kti_cqrs_rs::{
+    errors::error::Error,
+    ports::{handler::query_handler_port::QueryHandlerPort, query_port::QueryPort},
+};
 
-use crate::contexts::app_context::AppContext;
+use crate::ports::element_repository_query_port::ElementRepositoryQueryPort;
 
 pub struct GetElementsQuery;
 
+impl QueryPort for GetElementsQuery {
+    type Output = Vec<i32>;
+}
+
+pub struct GetElementsHandler {
+    repository: Arc<dyn ElementRepositoryQueryPort>,
+}
+
+impl GetElementsHandler {
+    pub fn new(repository: Arc<dyn ElementRepositoryQueryPort>) -> Self {
+        Self { repository }
+    }
+}
+
 #[async_trait]
-impl QueryHandlerPort for GetElementsQuery {
-    type Context = Arc<RwLock<AppContext>>;
-    type Output = Result<Vec<i32>, Error>;
-
-    async fn execute(&self, context: Self::Context) -> Self::Output {
-        let ctx = context.read().await;
-        let query_repository = ctx.get_query_repository();
-
-        query_repository.get_elements().await
+impl QueryHandlerPort<GetElementsQuery> for GetElementsHandler {
+    async fn handle(&self, _query: GetElementsQuery) -> Result<Vec<i32>, Error> {
+        self.repository.get_elements().await
     }
 }
