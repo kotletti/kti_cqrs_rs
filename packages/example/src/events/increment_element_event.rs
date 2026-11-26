@@ -8,7 +8,6 @@ use kti_cqrs_rs::{
 
 use crate::ports::element_repository_command_port::ElementRepositoryCommandPort;
 
-#[derive(Clone)]
 pub struct IncrementElementEvent {
     pub element: i32,
 }

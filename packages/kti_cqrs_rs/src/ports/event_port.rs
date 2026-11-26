@@ -1,1 +1,1 @@
-pub trait EventPort: Clone + Send + 'static {}
+pub trait EventPort: Send + 'static {}

@@ -15,13 +15,24 @@ use crate::{
     },
 };
 
-#[derive(Default)]
 pub struct CommandBusAdapter {
     handlers: HashMap<TypeId, Box<dyn Any + Send + Sync>>,
 }
 
 impl CommandBusAdapter {
-    pub fn register<Command, Handler>(mut self, handler: Handler) -> Result<Self, Error>
+    pub fn builder() -> CommandBusBuilder {
+        CommandBusBuilder::default()
+    }
+}
+
+#[derive(Default)]
+pub struct CommandBusBuilder {
+    handlers: HashMap<TypeId, Box<dyn Any + Send + Sync>>,
+    duplicates: Vec<&'static str>,
+}
+
+impl CommandBusBuilder {
+    pub fn register<Command, Handler>(mut self, handler: Handler) -> Self
     where
         Command: CommandPort,
         Handler: CommandHandlerPort<Command> + 'static,
@@ -32,12 +43,23 @@ impl CommandBusAdapter {
         let handler: CommandHandler<Command> = Arc::new(handler);
 
         if self.handlers.insert(type_id, Box::new(handler)).is_some() {
+            self.duplicates.push(type_name);
+        }
+
+        self
+    }
+
+    pub fn build(self) -> Result<CommandBusAdapter, Error> {
+        if !self.duplicates.is_empty() {
             return Err(Error::from(format!(
-                "Command handler is already registered: {type_name}"
+                "Command handlers are registered more than once: {}",
+                self.duplicates.join(", ")
             )));
         }
 
-        Ok(self)
+        Ok(CommandBusAdapter {
+            handlers: self.handlers,
+        })
     }
 }
 

@@ -14,14 +14,24 @@ use crate::{
         query_port::QueryPort,
     },
 };
-
-#[derive(Default)]
 pub struct QueryBusAdapter {
     handlers: HashMap<TypeId, Box<dyn Any + Send + Sync>>,
 }
 
 impl QueryBusAdapter {
-    pub fn register<Query, Handler>(mut self, handler: Handler) -> Result<Self, Error>
+    pub fn builder() -> QueryBusBuilder {
+        QueryBusBuilder::default()
+    }
+}
+
+#[derive(Default)]
+pub struct QueryBusBuilder {
+    handlers: HashMap<TypeId, Box<dyn Any + Send + Sync>>,
+    duplicates: Vec<&'static str>,
+}
+
+impl QueryBusBuilder {
+    pub fn register<Query, Handler>(mut self, handler: Handler) -> Self
     where
         Query: QueryPort,
         Handler: QueryHandlerPort<Query> + 'static,
@@ -32,12 +42,23 @@ impl QueryBusAdapter {
         let handler: QueryHandler<Query> = Arc::new(handler);
 
         if self.handlers.insert(type_id, Box::new(handler)).is_some() {
+            self.duplicates.push(type_name);
+        }
+
+        self
+    }
+
+    pub fn build(self) -> Result<QueryBusAdapter, Error> {
+        if !self.duplicates.is_empty() {
             return Err(Error::from(format!(
-                "Query handler is already registered: {type_name}"
+                "Query handlers are registered more than once: {}",
+                self.duplicates.join(", ")
             )));
         }
 
-        Ok(self)
+        Ok(QueryBusAdapter {
+            handlers: self.handlers,
+        })
     }
 }
 

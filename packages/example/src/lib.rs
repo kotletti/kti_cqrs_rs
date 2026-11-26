@@ -44,17 +44,20 @@ mod tests {
         let query_repository = Arc::new(ElementRepositoryQueryAdapter::new(store.clone()));
         let command_repository = Arc::new(ElementRepositoryCommandAdapter::new(store));
 
-        let command_bus = CommandBusAdapter::default()
-            .register(AddElementHandler::new(command_repository.clone()))?
-            .register(UpdateElementHandler::new(command_repository.clone()))?
-            .register(RemoveElementHandler::new(command_repository.clone()))?;
+        let command_bus = CommandBusAdapter::builder()
+            .register(AddElementHandler::new(command_repository.clone()))
+            .register(UpdateElementHandler::new(command_repository.clone()))
+            .register(RemoveElementHandler::new(command_repository.clone()))
+            .build()?;
 
-        let query_bus = QueryBusAdapter::default()
-            .register(GetElementsHandler::new(query_repository.clone()))?
-            .register(GetCountElementsHandler::new(query_repository))?;
+        let query_bus = QueryBusAdapter::builder()
+            .register(GetElementsHandler::new(query_repository.clone()))
+            .register(GetCountElementsHandler::new(query_repository))
+            .build()?;
 
-        let event_bus = EventBusAdapter::default()
-            .register(IncrementElementHandler::new(command_repository))?;
+        let event_bus = EventBusAdapter::builder()
+            .register(IncrementElementHandler::new(command_repository))
+            .build()?;
 
         Ok(Box::new(ElementServiceAdapter::new(
             command_bus,

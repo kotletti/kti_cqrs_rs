@@ -13,13 +13,24 @@ use crate::{
     },
 };
 
-#[derive(Default)]
 pub struct EventBusAdapter {
     handlers: HashMap<TypeId, Box<dyn Any + Send + Sync>>,
 }
 
 impl EventBusAdapter {
-    pub fn register<Event, Handler>(mut self, handler: Handler) -> Result<Self, Error>
+    pub fn builder() -> EventBusBuilder {
+        EventBusBuilder::default()
+    }
+}
+
+#[derive(Default)]
+pub struct EventBusBuilder {
+    handlers: HashMap<TypeId, Box<dyn Any + Send + Sync>>,
+    duplicates: Vec<&'static str>,
+}
+
+impl EventBusBuilder {
+    pub fn register<Event, Handler>(mut self, handler: Handler) -> Self
     where
         Event: EventPort,
         Handler: EventHandlerPort<Event> + 'static,
@@ -30,17 +41,28 @@ impl EventBusAdapter {
         let handler: EventHandler<Event> = Arc::new(handler);
 
         if self.handlers.insert(type_id, Box::new(handler)).is_some() {
+            self.duplicates.push(type_name);
+        }
+
+        self
+    }
+
+    pub fn build(self) -> Result<EventBusAdapter, Error> {
+        if !self.duplicates.is_empty() {
             return Err(Error::from(format!(
-                "Command handler is already registered: {type_name}"
+                "Event handlers are registered more than once: {}",
+                self.duplicates.join(", ")
             )));
         }
 
-        Ok(self)
+        Ok(EventBusAdapter {
+            handlers: self.handlers,
+        })
     }
 }
 
 impl EventBusPort for EventBusAdapter {
-    fn send<Event: EventPort + Sync>(&self, event: Event) {
+    fn send<Event: EventPort>(&self, event: Event) {
         let type_id = TypeId::of::<Event>();
         let type_name = type_name::<Event>();
 
@@ -56,9 +78,9 @@ impl EventBusPort for EventBusAdapter {
         };
 
         tokio::spawn(async move {
-            let event = event.clone();
-
-            handler.handle(event).await
+            if let Err(e) = handler.handle(event).await {
+                eprintln!("{type_name}: {e}");
+            }
         });
     }
 }

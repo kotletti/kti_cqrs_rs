@@ -1,5 +1,25 @@
 # Changelog
 
+## Version 0.5.0 BREAKING CHANGES
+* Split messages and handlers: a command, a query and an event are plain data, a handler is a separate type with its own dependencies
+* Add `CommandPort`, `QueryPort` & `EventPort`
+* Make handler ports generic over the message: `CommandHandlerPort<Command>`, `QueryHandlerPort<Query>` & `EventHandlerPort<Event>`
+* Replace `execute(&self, context)` with `handle(&self, message)`
+* Remove `Context` from handlers, buses and `ServiceBusPort`
+* Move `Output` from handlers to `CommandPort` & `QueryPort`, it is the successful result now
+* Return `Result<Output, Error>` from `handle` and `send` of commands & queries
+* Make buses own their handlers
+* Add `CommandBusBuilder`, `QueryBusBuilder` & `EventBusBuilder`: `builder()`, `register(...)`, `build()?`
+* Report every message registered more than once as an error of `build`
+* Report a command or a query without a handler as an error of `send`, log an event without a handler
+* Make `EventBusPort::send` sync, `EventBusAdapter` spawns the handler on the tokio runtime and logs its error
+* Remove `Clone` & `Copy` from bus adapters, they are created only by builders
+* Remove blanket implementations of handler ports for `Box<H>`
+* Add `CommandHandler`, `QueryHandler` & `EventHandler` aliases
+* Add `tokio` to the library deps
+* Rewrite the example on handlers with constructor injection
+* Add tests for buses & `ServiceBusPort`
+
 ## Version 0.4.0 BREAKING CHANGES
 * Remove `Result<O, Error>` from handler and bus signatures
 * `CommandHandlerPort::execute` now returns `Self::Output`
